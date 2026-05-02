@@ -1,6 +1,7 @@
 # SM Academy — Result Management System
 
 **Developer:** Muhammad Abdullah Arif — Frontend Web & Python Developer  
+**CEO:** Sir Saad Manzoor SB  
 **Version:** 1.0 | **Framework:** Django 4.2 | **Database:** SQLite (offline, no setup needed)
 
 ---
