@@ -1,0 +1,1214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>SM Academy | Professional Result System</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://sql.js.org/dist/sql-wasm.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            font-family: 'Poppins', 'Segoe UI', sans-serif;
+            min-height: 100vh;
+        }
+        
+        .sidebar {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+            padding: 20px 12px;
+        }
+        .sidebar .nav-link {
+            color: #1e466e;
+            border-radius: 12px;
+            margin: 6px 0;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .sidebar .nav-link:hover, .sidebar .nav-link.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        .card-modern {
+            border: none;
+            border-radius: 24px;
+            background: white;
+            box-shadow: 0 10px 25px -5px rgba(0,0,0,0.1);
+        }
+        .btn-accent {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 40px;
+            padding: 8px 24px;
+            border: none;
+            transition: transform 0.3s;
+        }
+        .btn-accent:hover {
+            transform: translateY(-2px);
+            color: white;
+            box-shadow: 0 5px 15px rgba(102,126,234,0.4);
+        }
+        .toast-container { z-index: 1100; }
+        .login-card { max-width: 480px; margin: 2rem auto; }
+        .grade-badge { font-weight: bold; padding: 4px 12px; border-radius: 40px; }
+        
+        /* ========== BEAUTIFUL REPORT CARD STYLES ========== */
+        .report-card-wrapper {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 30px;
+            padding: 20px;
+            animation: fadeInUp 0.5s ease-out;
+        }
+        
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .professional-report {
+            background: white;
+            border-radius: 25px;
+            overflow: hidden;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+        }
+        
+        .report-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+            position: relative;
+        }
+        
+        .report-header::before {
+            content: '🏆';
+            position: absolute;
+            top: 20px;
+            right: 30px;
+            font-size: 40px;
+            opacity: 0.3;
+        }
+        
+        .academy-logo {
+            width: 60px;
+            height: 60px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 15px;
+            font-size: 30px;
+        }
+        
+        .report-title {
+            font-size: 28px;
+            font-weight: 700;
+            margin: 0;
+        }
+        
+        .report-subtitle {
+            font-size: 14px;
+            opacity: 0.9;
+            margin: 5px 0;
+        }
+        
+        .report-body {
+            padding: 30px;
+        }
+        
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin-bottom: 25px;
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 15px;
+        }
+        
+        .info-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 0;
+            border-bottom: 1px dashed #e0e0e0;
+        }
+        
+        .info-label {
+            font-weight: 600;
+            color: #667eea;
+            font-size: 14px;
+        }
+        
+        .info-value {
+            font-weight: 500;
+            color: #333;
+            font-size: 14px;
+        }
+        
+        .grade-circle-container {
+            text-align: center;
+            margin: 20px 0;
+        }
+        
+        .grade-circle {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            color: white;
+            box-shadow: 0 10px 25px rgba(102,126,234,0.3);
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+        
+        .grade-letter {
+            font-size: 42px;
+            font-weight: 800;
+            line-height: 1;
+        }
+        
+        .grade-percent {
+            font-size: 16px;
+            opacity: 0.9;
+        }
+        
+        .status-badge {
+            display: inline-block;
+            padding: 6px 20px;
+            border-radius: 50px;
+            font-weight: 600;
+            margin-top: 10px;
+        }
+        
+        .status-pass {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .status-fail {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .section-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: #667eea;
+            margin: 25px 0 15px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #667eea;
+        }
+        
+        .test-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        .test-table th {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 12px;
+            font-size: 13px;
+            font-weight: 600;
+        }
+        
+        .test-table td {
+            padding: 10px;
+            border-bottom: 1px solid #e0e0e0;
+            font-size: 13px;
+        }
+        
+        .test-table tr:hover {
+            background: #f8f9fa;
+        }
+        
+        .remarks-box {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+            padding: 15px;
+            border-radius: 15px;
+            margin-top: 20px;
+            text-align: center;
+        }
+        
+        .footer-note {
+            text-align: center;
+            padding: 20px;
+            background: #f8f9fa;
+            font-size: 11px;
+            color: #666;
+        }
+        
+        @media (max-width: 768px) {
+            .info-grid {
+                grid-template-columns: 1fr;
+                gap: 10px;
+            }
+            .report-header {
+                padding: 20px;
+            }
+            .report-body {
+                padding: 20px;
+            }
+            .test-table th, .test-table td {
+                padding: 8px;
+                font-size: 11px;
+            }
+            .grade-circle {
+                width: 90px;
+                height: 90px;
+            }
+            .grade-letter {
+                font-size: 32px;
+            }
+        }
+    </style>
+</head>
+<body>
+<div id="appRoot"></div>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    // ==================== GLOBALS ====================
+    let db = null;
+    let currentUser = null;
+    let SQL = null;
+
+    function showToast(message, type = 'success') {
+        const toastDiv = document.createElement('div');
+        toastDiv.className = 'toast align-items-center text-white bg-' + (type === 'success' ? 'success' : 'danger') + ' border-0';
+        toastDiv.setAttribute('role', 'alert');
+        toastDiv.innerHTML = `<div class="d-flex"><div class="toast-body">${message}</div><button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button></div>`;
+        document.getElementById('toastContainer').appendChild(toastDiv);
+        const bsToast = new bootstrap.Toast(toastDiv, { delay: 3000 });
+        bsToast.show();
+        toastDiv.addEventListener('hidden.bs.toast', () => toastDiv.remove());
+    }
+
+    function initDatabase() {
+        if (!db) return;
+        
+        db.run(`CREATE TABLE IF NOT EXISTS students (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            name TEXT NOT NULL,
+            father_name TEXT NOT NULL,
+            roll_number TEXT UNIQUE NOT NULL,
+            class_name TEXT NOT NULL,
+            password TEXT NOT NULL
+        )`);
+        
+        db.run(`CREATE TABLE IF NOT EXISTS tests (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            test_name TEXT NOT NULL,
+            test_date TEXT DEFAULT CURRENT_DATE
+        )`);
+        
+        db.run(`CREATE TABLE IF NOT EXISTS results (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            student_id INTEGER NOT NULL,
+            test_id INTEGER NOT NULL,
+            obtained_marks REAL NOT NULL,
+            percentage REAL,
+            grade TEXT,
+            remarks TEXT,
+            FOREIGN KEY(student_id) REFERENCES students(id),
+            FOREIGN KEY(test_id) REFERENCES tests(id),
+            UNIQUE(student_id, test_id)
+        )`);
+        
+        db.run(`CREATE TABLE IF NOT EXISTS teacher (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            username TEXT UNIQUE,
+            password TEXT
+        )`);
+        
+        const existingAdmin = db.exec("SELECT * FROM teacher WHERE username = 'admin'");
+        if (!existingAdmin.length || existingAdmin[0].values.length === 0) {
+            db.run("INSERT INTO teacher (username, password) VALUES ('admin', 'admin123')");
+        }
+        
+        const existingTests = db.exec("SELECT COUNT(*) FROM tests");
+        if (existingTests.length && existingTests[0].values[0][0] === 0) {
+            db.run(`INSERT INTO tests (test_name, test_date) VALUES 
+                ('Week 1 Test', '2024-01-15'),
+                ('Week 2 Test', '2024-01-22'),
+                ('Week 3 Test', '2024-01-29'),
+                ('Mid Term Test', '2024-02-10')`);
+        }
+        
+        persistDatabase();
+    }
+
+    function loadSQLAndInit() {
+        return new Promise((resolve) => {
+            if (window.SQL && !SQL) {
+                SQL = window.SQL;
+                const dbData = localStorage.getItem('sm_academy_db');
+                if (dbData) {
+                    try {
+                        const uint8 = new Uint8Array(JSON.parse(dbData));
+                        db = new SQL.Database(uint8);
+                    } catch(e) { db = new SQL.Database(); }
+                } else {
+                    db = new SQL.Database();
+                }
+                initDatabase();
+                resolve();
+            } else if (window.initSqlJs) {
+                window.initSqlJs({ locateFile: () => "https://sql.js.org/dist/sql-wasm.wasm" }).then(function(SQLlib){
+                    SQL = SQLlib;
+                    const stored = localStorage.getItem('sm_academy_db');
+                    if (stored) {
+                        try {
+                            const uint8 = new Uint8Array(JSON.parse(stored));
+                            db = new SQL.Database(uint8);
+                        } catch(e) { db = new SQL.Database(); }
+                    } else {
+                        db = new SQL.Database();
+                    }
+                    initDatabase();
+                    resolve();
+                });
+            } else {
+                setTimeout(() => loadSQLAndInit().then(resolve), 100);
+            }
+        });
+    }
+
+    function persistDatabase() {
+        if (db) {
+            const exportData = db.export();
+            const arr = Array.from(exportData);
+            localStorage.setItem('sm_academy_db', JSON.stringify(arr));
+        }
+    }
+
+    function calculateGradeRemarks(percentage) {
+        if (percentage >= 90) return { grade: "A+", remarks: "Outstanding Performance! 🌟" };
+        if (percentage >= 80) return { grade: "A", remarks: "Excellent Work! 🎉" };
+        if (percentage >= 70) return { grade: "B", remarks: "Very Good! 👍" };
+        if (percentage >= 60) return { grade: "C", remarks: "Good, Keep Improving! 📈" };
+        if (percentage >= 50) return { grade: "D", remarks: "Satisfactory, Need More Effort! 💪" };
+        return { grade: "F", remarks: "Work Hard, You Can Do Better! ⚠️" };
+    }
+
+    function saveResult(studentId, testId, obtainedMarks) {
+        const maxMarks = 20;
+        const percent = (obtainedMarks / maxMarks) * 100;
+        const { grade, remarks } = calculateGradeRemarks(percent);
+        
+        const existing = db.exec(`SELECT id FROM results WHERE student_id = ? AND test_id = ?`, [studentId, testId]);
+        if (existing.length && existing[0].values.length > 0) {
+            db.run(`UPDATE results SET obtained_marks = ?, percentage = ?, grade = ?, remarks = ? WHERE student_id = ? AND test_id = ?`,
+                [obtainedMarks, percent, grade, remarks, studentId, testId]);
+        } else {
+            db.run(`INSERT INTO results (student_id, test_id, obtained_marks, percentage, grade, remarks) VALUES (?, ?, ?, ?, ?, ?)`,
+                [studentId, testId, obtainedMarks, percent, grade, remarks]);
+        }
+        persistDatabase();
+        return true;
+    }
+
+    function navigateTo(page) {
+        window.location.hash = page;
+        renderPageByHash();
+    }
+
+    function logout() {
+        currentUser = null;
+        localStorage.removeItem('sm_session');
+        navigateTo('index.html');
+    }
+
+    function renderPageByHash() {
+        let hash = window.location.hash.replace('#', '');
+        if (!hash || hash === '') hash = 'index.html';
+        const container = document.getElementById('appRoot');
+        if (!container) return;
+        
+        if (hash === 'index.html') renderIndex(container);
+        else if (hash === 'teacher-login.html') renderTeacherLogin(container);
+        else if (hash === 'teacher-dashboard.html') { 
+            if (!currentUser || currentUser.role !== 'teacher') renderTeacherLogin(container); 
+            else renderTeacherDashboard(container); 
+        }
+        else if (hash === 'student-register.html') renderStudentRegister(container);
+        else if (hash === 'student-login.html') renderStudentLogin(container);
+        else if (hash === 'student-dashboard.html') { 
+            if (!currentUser || currentUser.role !== 'student') renderStudentLogin(container); 
+            else renderStudentDashboard(container); 
+        }
+        else if (hash === 'reports.html') { 
+            if (!currentUser || currentUser.role !== 'teacher') renderTeacherLogin(container); 
+            else renderReportsPage(container); 
+        }
+        else renderIndex(container);
+    }
+
+    // ==================== HOME PAGE ====================
+    function renderIndex(container) {
+        container.innerHTML = `
+        <div class="container py-5">
+            <div class="text-center mb-5">
+                <h1 class="display-5 fw-bold" style="color:white;">📘 SM Academy</h1>
+                <p style="color:white;">Computer Science Result Management System</p>
+                <small style="color:rgba(255,255,255,0.8);">All tests are 20 marks each</small>
+            </div>
+            <div class="row justify-content-center g-4">
+                <div class="col-md-5">
+                    <div class="card card-modern p-4 text-center">
+                        <i class="bi bi-person-badge fs-1" style="color:#667eea"></i>
+                        <h3>Teacher Login</h3>
+                        <a href="#teacher-login.html" class="btn btn-accent">Login as Teacher</a>
+                    </div>
+                </div>
+                <div class="col-md-5">
+                    <div class="card card-modern p-4 text-center">
+                        <i class="bi bi-mortarboard fs-1" style="color:#667eea"></i>
+                        <h3>Student Login</h3>
+                        <a href="#student-login.html" class="btn btn-accent">Student Login</a>
+                        <hr>
+                        <a href="#student-register.html" class="btn btn-outline-primary">New Registration</a>
+                    </div>
+                </div>
+            </div>
+            <footer class="text-center mt-5 pt-4" style="color:white;">
+                <small>Developer: Muhammad Abdullah Arif </small>
+            </footer>
+        </div>`;
+    }
+
+    // ==================== TEACHER LOGIN ====================
+    function renderTeacherLogin(container) {
+        container.innerHTML = `
+        <div class="container py-5">
+            <div class="card card-modern login-card p-4">
+                <h2 class="text-center">👩‍🏫 Teacher Login</h2>
+                <form id="teacherLoginForm">
+                    <div class="mb-3"><label>Username</label><input type="text" id="username" class="form-control" required></div>
+                    <div class="mb-3"><label>Password</label><input type="password" id="password" class="form-control" required></div>
+                    <button class="btn btn-accent w-100">Login</button>
+                </form>
+                
+                <a href="#index.html" class="btn btn-link">← Back</a>
+            </div>
+        </div>`;
+        
+        document.getElementById('teacherLoginForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const user = document.getElementById('username').value;
+            const pwd = document.getElementById('password').value;
+            const res = db.exec(`SELECT * FROM teacher WHERE username = ? AND password = ?`, [user, pwd]);
+            if (res.length && res[0].values.length) {
+                currentUser = { role: 'teacher', id: 1, name: 'Teacher' };
+                localStorage.setItem('sm_session', JSON.stringify(currentUser));
+                showToast('Welcome Teacher!');
+                navigateTo('teacher-dashboard.html');
+            } else showToast('Invalid credentials', 'danger');
+        });
+    }
+
+    // ==================== STUDENT REGISTER ====================
+    function renderStudentRegister(container) {
+        container.innerHTML = `
+        <div class="container py-4">
+            <div class="card card-modern" style="max-width:600px;margin:0 auto;">
+                <div class="p-4">
+                    <h3>📝 Student Registration</h3>
+                    <form id="regForm">
+                        <div class="mb-3"><input class="form-control" placeholder="Full Name" id="regName" required></div>
+                        <div class="mb-3"><input class="form-control" placeholder="Father Name" id="regFather"></div>
+                        <div class="mb-3"><input class="form-control" placeholder="Roll Number" id="regRoll" required></div>
+                        <div class="mb-3"><input class="form-control" placeholder="Class (e.g., 10th CS)" id="regClass" required></div>
+                        <div class="mb-3"><input type="password" class="form-control" placeholder="Create Password" id="regPass" required></div>
+                        <button class="btn btn-accent w-100">Register</button>
+                    </form>
+                    <a href="#index.html" class="btn btn-link mt-2">← Back to Home</a>
+                </div>
+            </div>
+        </div>`;
+        
+        document.getElementById('regForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const name = document.getElementById('regName').value;
+            const father = document.getElementById('regFather').value;
+            const roll = document.getElementById('regRoll').value;
+            const cls = document.getElementById('regClass').value;
+            const pass = document.getElementById('regPass').value;
+            if (!name || !roll || !cls) return showToast('Fill required fields', 'danger');
+            try {
+                db.run(`INSERT INTO students (name, father_name, roll_number, class_name, password) VALUES (?,?,?,?,?)`, 
+                    [name, father, roll, cls, pass]);
+                persistDatabase();
+                showToast('Registered successfully! Login now.');
+                navigateTo('student-login.html');
+            } catch(e) { showToast('Roll number already exists', 'danger'); }
+        });
+    }
+
+    // ==================== STUDENT LOGIN ====================
+    function renderStudentLogin(container) {
+        container.innerHTML = `
+        <div class="container py-5">
+            <div class="card card-modern login-card p-4">
+                <h2>🎓 Student Login</h2>
+                <form id="studentLoginForm">
+                    <div class="mb-3"><label>Student Name</label><input id="sname" class="form-control" required></div>
+                    <div class="mb-3"><label>Roll Number</label><input id="roll" class="form-control" required></div>
+                    <div class="mb-3"><label>Class</label><input id="classname" class="form-control" required></div>
+                    <div class="mb-3"><label>Password</label><input type="password" id="spass" class="form-control" required></div>
+                    <button class="btn btn-accent w-100">Login</button>
+                </form>
+                <a href="#index.html" class="btn btn-link mt-2">Back</a>
+            </div>
+        </div>`;
+        
+        document.getElementById('studentLoginForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const name = document.getElementById('sname').value;
+            const roll = document.getElementById('roll').value;
+            const cls = document.getElementById('classname').value;
+            const pass = document.getElementById('spass').value;
+            const student = db.exec(`SELECT id, name, father_name, roll_number, class_name FROM students WHERE name = ? AND roll_number = ? AND class_name = ? AND password = ?`, 
+                [name, roll, cls, pass]);
+            if (student.length && student[0].values.length) {
+                const row = student[0].values[0];
+                currentUser = { role: 'student', id: row[0], name: row[1], father_name: row[2], roll_number: row[3], class_name: row[4] };
+                localStorage.setItem('sm_session', JSON.stringify(currentUser));
+                showToast(`Welcome ${row[1]}`);
+                navigateTo('student-dashboard.html');
+            } else showToast('Invalid credentials', 'danger');
+        });
+    }
+
+    // ==================== BEAUTIFUL REPORT CARD FUNCTION ====================
+    function showBeautifulReportCard(studentId, studentName) {
+        const student = db.exec(`SELECT name, father_name, roll_number, class_name FROM students WHERE id = ?`, [studentId]);
+        const results = db.exec(`SELECT t.test_name, r.obtained_marks, r.percentage, r.grade, r.remarks, t.test_date 
+            FROM results r JOIN tests t ON r.test_id = t.id WHERE r.student_id = ? ORDER BY t.test_date DESC`, [studentId]);
+        
+        if (!student.length) return;
+        const s = student[0].values[0];
+        
+        let totalObtained = 0;
+        let totalTests = 0;
+        if (results.length && results[0].values.length) {
+            results[0].values.forEach(r => totalObtained += r[1]);
+            totalTests = results[0].values.length;
+        }
+        let overallPercent = totalTests > 0 ? (totalObtained / (totalTests * 20)) * 100 : 0;
+        let overallGrade = calculateGradeRemarks(overallPercent);
+        
+        let modalHtml = `
+        <div class="modal fade" id="beautifulReportModal" tabindex="-1" data-bs-backdrop="static">
+            <div class="modal-dialog modal-lg modal-dialog-centered">
+                <div class="modal-content" style="background: transparent; border: none;">
+                    <div class="report-card-wrapper">
+                        <div class="professional-report">
+                            <div class="report-header">
+                                <div class="academy-logo">
+                                    <i class="bi bi-trophy-fill" style="font-size: 35px;"></i>
+                                </div>
+                                <h1 class="report-title">SM Academy</h1>
+                                <p class="report-subtitle">Premium Result Management System</p>
+                                <p class="report-subtitle">Computer Science Department</p>
+                                <h4 style="margin-top: 10px;">${s[3]}</h4>
+                            </div>
+                            
+                            <div class="report-body">
+                                <div class="info-grid">
+                                    <div class="info-item">
+                                        <span class="info-label"><i class="bi bi-person-circle"></i> Student Name:</span>
+                                        <span class="info-value">${s[0]}</span>
+                                    </div>
+                                    <div class="info-item">
+                                        <span class="info-label"><i class="bi bi-people"></i> Father's Name:</span>
+                                        <span class="info-value">${s[1]}</span>
+                                    </div>
+                                    <div class="info-item">
+                                        <span class="info-label"><i class="bi bi-hash"></i> Roll Number:</span>
+                                        <span class="info-value">${s[2]}</span>
+                                    </div>
+                                    <div class="info-item">
+                                        <span class="info-label"><i class="bi bi-calendar"></i> Academic Year:</span>
+                                        <span class="info-value">2024-2025</span>
+                                    </div>
+                                </div>`;
+        
+        if (results.length && results[0].values.length) {
+            modalHtml += `
+                                <div class="grade-circle-container">
+                                    <div class="grade-circle">
+                                        <div class="grade-letter">${overallGrade.grade}</div>
+                                        <div class="grade-percent">${overallPercent.toFixed(1)}%</div>
+                                    </div>
+                                    <div>
+                                        <span class="status-badge ${overallPercent >= 50 ? 'status-pass' : 'status-fail'}">
+                                            ${overallPercent >= 50 ? '✅ PASSED' : '⚠️ NEEDS IMPROVEMENT'}
+                                        </span>
+                                    </div>
+                                </div>
+                                
+                                <div class="section-title">
+                                    <i class="bi bi-journal-text"></i> Test-wise Performance Report
+                                </div>
+                                
+                                <div style="overflow-x: auto;">
+                                    <table class="test-table">
+                                        <thead>
+                                            <tr><th>Test Name</th><th>Date</th><th>Obtained / 20</th><th>Percentage</th><th>Grade</th><th>Remarks</th></tr>
+                                        </thead>
+                                        <tbody>`;
+            results[0].values.forEach(r => {
+                modalHtml += `<tr>
+                    <td>${r[0]}</td>
+                    <td>${r[5]}</td>
+                    <td><strong>${r[1]}/20</strong></td>
+                    <td>${r[2].toFixed(1)}%</td>
+                    <td><span class="badge" style="background: linear-gradient(135deg, #667eea, #764ba2);">${r[3]}</span></td>
+                    <td>${r[4]}</td>
+                </tr>`;
+            });
+            modalHtml += `
+                                        </tbody>
+                                    </table>
+                                </div>
+                                
+                                <div class="remarks-box">
+                                    <strong>🎯 Overall Remarks:</strong> ${overallGrade.remarks}
+                                </div>`;
+        } else {
+            modalHtml += `<div class="alert alert-warning text-center">📌 No results recorded yet. Teacher will update soon.</div>`;
+        }
+        
+        modalHtml += `
+                                <div class="footer-note">
+                                    <i class="bi bi-award"></i> This is a computer-generated report card.<br>
+                                    Developer: Muhammad Abdullah Arif <br>
+                                    © 2024 SM Academy - Excellence in Education
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer" style="background: transparent; border: none; justify-content: center; gap: 10px; margin-top: 15px;">
+                        <button class="btn btn-accent" id="downloadReportBtn"><i class="bi bi-download"></i> Download PDF Report</button>
+                        <button class="btn btn-secondary" data-bs-dismiss="modal"><i class="bi bi-x-circle"></i> Close</button>
+                    </div>
+                </div>
+            </div>
+        </div>`;
+        
+        document.body.insertAdjacentHTML('beforeend', modalHtml);
+        const modal = new bootstrap.Modal(document.getElementById('beautifulReportModal'));
+        modal.show();
+        
+        document.getElementById('downloadReportBtn')?.addEventListener('click', () => downloadBeautifulReportPDF(studentId));
+        document.getElementById('beautifulReportModal').addEventListener('hidden.bs.modal', () => document.getElementById('beautifulReportModal')?.remove());
+    }
+    
+    async function downloadBeautifulReportPDF(studentId) {
+        const { jsPDF } = window.jspdf;
+        const student = db.exec(`SELECT name, father_name, roll_number, class_name FROM students WHERE id = ?`, [studentId]);
+        const results = db.exec(`SELECT t.test_name, r.obtained_marks, r.percentage, r.grade, r.remarks, t.test_date 
+            FROM results r JOIN tests t ON r.test_id = t.id WHERE r.student_id = ? ORDER BY t.test_date DESC`, [studentId]);
+        
+        if (!student.length || !results.length) return;
+        const s = student[0].values[0];
+        
+        let totalObtained = 0;
+        results[0].values.forEach(r => totalObtained += r[1]);
+        let overallPercent = (totalObtained / (results[0].values.length * 20)) * 100;
+        let overallGrade = calculateGradeRemarks(overallPercent);
+        
+        let tableRows = '';
+        results[0].values.forEach(r => {
+            tableRows += `<tr style="border-bottom:1px solid #e0e0e0;">
+                <td style="padding:10px;">${r[0]}</td>
+                <td style="padding:10px;">${r[5]}</td>
+                <td style="padding:10px;"><strong>${r[1]}/20</strong></td>
+                <td style="padding:10px;">${r[2].toFixed(1)}%</td>
+                <td style="padding:10px;">${r[3]}</td>
+                <td style="padding:10px;">${r[4]}</td>
+            </tr>`;
+        });
+        
+        const div = document.createElement('div');
+        div.style.padding = '0';
+        div.style.background = 'white';
+        div.style.width = '800px';
+        div.style.fontFamily = 'Poppins, Arial, sans-serif';
+        
+        div.innerHTML = `
+            <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px; text-align: center;">
+                <div style="width:60px;height:60px;background:rgba(255,255,255,0.2);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 15px;font-size:30px;">🏆</div>
+                <h1 style="margin:0;">SM Academy</h1>
+                <p style="margin:5px 0;">Premium Result Management System</p>
+                <p>Computer Science Department</p>
+                <h3>${s[3]}</h3>
+            </div>
+            <div style="padding: 30px;">
+                <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:15px;background:#f8f9fa;padding:20px;border-radius:15px;margin-bottom:25px;">
+                    <div><strong>Student Name:</strong> ${s[0]}</div>
+                    <div><strong>Father's Name:</strong> ${s[1]}</div>
+                    <div><strong>Roll Number:</strong> ${s[2]}</div>
+                    <div><strong>Academic Year:</strong> 2024-2025</div>
+                </div>
+                <div style="text-align:center;margin:20px 0;">
+                    <div style="width:100px;height:100px;border-radius:50%;background:linear-gradient(135deg,#667eea,#764ba2);margin:0 auto;display:flex;align-items:center;justify-content:center;flex-direction:column;color:white;">
+                        <div style="font-size:32px;font-weight:bold;">${overallGrade.grade}</div>
+                        <div style="font-size:14px;">${overallPercent.toFixed(1)}%</div>
+                    </div>
+                    <div style="margin-top:10px;"><span style="background:${overallPercent>=50?'#d4edda':'#f8d7da'};color:${overallPercent>=50?'#155724':'#721c24'};padding:5px 20px;border-radius:50px;">${overallPercent>=50?'✅ PASSED':'⚠️ NEEDS IMPROVEMENT'}</span></div>
+                </div>
+                <h3 style="color:#667eea;margin:20px 0 10px;">Test-wise Performance</h3>
+                <table style="width:100%;border-collapse:collapse;">
+                    <thead><tr style="background:linear-gradient(135deg,#667eea,#764ba2);color:white;">
+                        <th style="padding:10px;">Test</th><th style="padding:10px;">Date</th><th style="padding:10px;">Marks</th><th style="padding:10px;">%</th><th style="padding:10px;">Grade</th><th style="padding:10px;">Remarks</th>
+                    </tr></thead>
+                    <tbody>${tableRows}</tbody>
+                </table>
+                <div style="background:linear-gradient(135deg,#f093fb,#f5576c);color:white;padding:15px;border-radius:15px;margin-top:20px;text-align:center;">
+                    <strong>Overall Remarks:</strong> ${overallGrade.remarks}
+                </div>
+                <div style="text-align:center;padding:20px;font-size:11px;color:#666;">
+                    Developer: Muhammad Abdullah Arif <br>
+                    © 2026 SM Academy - Excellence in Education
+                </div>
+            </div>
+        `;
+        
+        document.body.appendChild(div);
+        const canvas = await html2canvas(div, { scale: 2, backgroundColor: '#ffffff' });
+        const imgData = canvas.toDataURL('image/png');
+        const pdf = new jsPDF('p', 'mm', 'a4');
+        const pdfWidth = pdf.internal.pageSize.getWidth();
+        const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+        pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+        pdf.save(`${s[0]}_Professional_Report_Card.pdf`);
+        div.remove();
+    }
+
+    // ==================== TEACHER DASHBOARD ====================
+    function renderTeacherDashboard(container) {
+        let currentSection = 'students';
+        
+        function loadContent() {
+            const tests = db.exec(`SELECT id, test_name, test_date FROM tests ORDER BY test_date DESC`);
+            const testsList = tests.length ? tests[0].values : [];
+            
+            container.innerHTML = `
+            <div class="container-fluid p-3">
+                <div class="row">
+                    <div class="col-md-3 col-lg-2 mb-3">
+                        <div class="sidebar">
+                            <h5><i class="bi bi-speedometer2"></i> Teacher Panel</h5>
+                            <hr>
+                            <div class="nav-link ${currentSection === 'students' ? 'active' : ''}" data-section="students">👥 All Students</div>
+                            <div class="nav-link ${currentSection === 'addStudent' ? 'active' : ''}" data-section="addStudent">➕ Add Student</div>
+                            <div class="nav-link ${currentSection === 'tests' ? 'active' : ''}" data-section="tests">📋 Manage Tests</div>
+                            <div class="nav-link ${currentSection === 'marks' ? 'active' : ''}" data-section="marks">✏️ Enter/Edit Marks</div>
+                            <div class="nav-link ${currentSection === 'results' ? 'active' : ''}" data-section="results">📊 View All Results</div>
+                            <div class="nav-link" data-section="reports">📄 Reports</div>
+                            <hr>
+                            <button id="logoutBtn" class="btn btn-outline-danger w-100">Logout</button>
+                        </div>
+                    </div>
+                    <div class="col-md-9 col-lg-10">
+                        <div id="dynamicContent" class="card-modern p-3"></div>
+                    </div>
+                </div>
+            </div>`;
+            
+            document.getElementById('logoutBtn')?.addEventListener('click', () => logout());
+            document.querySelectorAll('.sidebar .nav-link').forEach(link => {
+                link.addEventListener('click', (e) => {
+                    const section = link.getAttribute('data-section');
+                    if (section === 'reports') navigateTo('reports.html');
+                    else if (section) { currentSection = section; loadContent(); }
+                });
+            });
+            
+            if (currentSection === 'students') showAllStudents();
+            else if (currentSection === 'addStudent') showAddStudent();
+            else if (currentSection === 'tests') showManageTests(testsList);
+            else if (currentSection === 'marks') showEnterMarks(testsList);
+            else if (currentSection === 'results') showAllResults();
+        }
+        
+        function showAllStudents() {
+            const students = db.exec(`SELECT id, name, father_name, roll_number, class_name FROM students ORDER BY id`);
+            const studentsList = students.length ? students[0].values : [];
+            let searchTerm = '';
+            
+            function renderList() {
+                const filtered = studentsList.filter(s => s[1].toLowerCase().includes(searchTerm) || s[3].toLowerCase().includes(searchTerm));
+                document.getElementById('dynamicContent').innerHTML = `
+                <h4>👥 All Students (${filtered.length})</h4>
+                <input type="text" id="searchInput" class="form-control mb-3" placeholder="🔍 Search by name or roll...">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead><tr><th>Name</th><th>Father Name</th><th>Roll No</th><th>Class</th><th>Actions</th></tr></thead>
+                        <tbody>${filtered.map(s => `
+                            <tr>
+                                <td>${s[1]}</td><td>${s[2]}</td><td>${s[3]}</td><td>${s[4]}</td>
+                                <td><button class="btn btn-sm btn-accent view-report" data-id="${s[0]}" data-name="${s[1]}"><i class="bi bi-eye"></i> View Report</button>
+                                <button class="btn btn-sm btn-danger delete-student" data-id="${s[0]}"><i class="bi bi-trash"></i> Delete</button>
+                                </td>
+                            </tr>`).join('')}</tbody>
+                    </table>
+                </div>`;
+                
+                document.getElementById('searchInput')?.addEventListener('keyup', (e) => { searchTerm = e.target.value.toLowerCase(); renderList(); });
+                document.querySelectorAll('.view-report').forEach(btn => {
+                    btn.addEventListener('click', () => showBeautifulReportCard(parseInt(btn.dataset.id), btn.dataset.name));
+                });
+                document.querySelectorAll('.delete-student').forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        if (confirm('Delete student? All results will be deleted!')) {
+                            db.run(`DELETE FROM results WHERE student_id = ?`, [parseInt(btn.dataset.id)]);
+                            db.run(`DELETE FROM students WHERE id = ?`, [parseInt(btn.dataset.id)]);
+                            persistDatabase();
+                            showToast('Student deleted');
+                            renderList();
+                        }
+                    });
+                });
+            }
+            renderList();
+        }
+        
+        function showAddStudent() {
+            document.getElementById('dynamicContent').innerHTML = `
+            <h4>➕ Add New Student</h4>
+            <form id="addStudentForm">
+                <div class="row">
+                    <div class="col-md-6 mb-3"><label>Full Name</label><input class="form-control" id="name" required></div>
+                    <div class="col-md-6 mb-3"><label>Father Name</label><input class="form-control" id="father"></div>
+                    <div class="col-md-4 mb-3"><label>Roll Number</label><input class="form-control" id="roll" required></div>
+                    <div class="col-md-4 mb-3"><label>Class</label><input class="form-control" id="class" required></div>
+                    <div class="col-md-4 mb-3"><label>Password</label><input type="password" class="form-control" id="password" required></div>
+                    <div class="col-12"><button type="submit" class="btn btn-accent">Create Student</button></div>
+                </div>
+            </form>`;
+            
+            document.getElementById('addStudentForm').addEventListener('submit', (e) => {
+                e.preventDefault();
+                try {
+                    db.run(`INSERT INTO students (name, father_name, roll_number, class_name, password) VALUES (?,?,?,?,?)`,
+                        [document.getElementById('name').value, document.getElementById('father').value, 
+                         document.getElementById('roll').value, document.getElementById('class').value, 
+                         document.getElementById('password').value]);
+                    persistDatabase();
+                    showToast('Student added!');
+                    currentSection = 'students';
+                    loadContent();
+                } catch(e) { showToast('Roll number exists!', 'danger'); }
+            });
+        }
+        
+        function showManageTests(testsList) {
+            document.getElementById('dynamicContent').innerHTML = `
+            <h4>📋 Manage Tests (All tests are 20 marks)</h4>
+            <button class="btn btn-accent mb-3" id="addTestBtn">+ Add New Test</button>
+            <div class="table-responsive">
+                <table class="table">
+                    <thead><tr><th>Test Name</th><th>Date</th><th>Action</th></tr></thead>
+                    <tbody>${testsList.map(t => `<tr><td>${t[1]}</td><td>${t[2]}</td><td><button class="btn btn-sm btn-danger delete-test" data-id="${t[0]}">Delete</button></td></tr>`).join('')}</tbody>
+                </table>
+            </div>
+            <div id="addTestForm" style="display:none;" class="mt-3 p-3 border rounded">
+                <h5>New Test (20 marks)</h5>
+                <form id="newTestForm">
+                    <div class="mb-2"><input class="form-control" placeholder="Test Name" id="testName" required></div>
+                    <div class="mb-2"><input type="date" class="form-control" id="testDate"></div>
+                    <button type="submit" class="btn btn-success">Save Test</button>
+                    <button type="button" id="cancelTestBtn" class="btn btn-secondary">Cancel</button>
+                </form>
+            </div>`;
+            
+            document.getElementById('addTestBtn')?.addEventListener('click', () => {
+                document.getElementById('addTestForm').style.display = 'block';
+            });
+            document.getElementById('cancelTestBtn')?.addEventListener('click', () => {
+                document.getElementById('addTestForm').style.display = 'none';
+            });
+            document.getElementById('newTestForm')?.addEventListener('submit', (e) => {
+                e.preventDefault();
+                db.run(`INSERT INTO tests (test_name, test_date) VALUES (?,?)`,
+                    [document.getElementById('testName').value, document.getElementById('testDate').value || new Date().toISOString().slice(0,10)]);
+                persistDatabase();
+                showToast('Test added!');
+                loadContent();
+            });
+            document.querySelectorAll('.delete-test').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    if (confirm('Delete test? All related results will be deleted!')) {
+                        db.run(`DELETE FROM results WHERE test_id = ?`, [parseInt(btn.dataset.id)]);
+                        db.run(`DELETE FROM tests WHERE id = ?`, [parseInt(btn.dataset.id)]);
+                        persistDatabase();
+                        showToast('Test deleted');
+                        loadContent();
+                    }
+                });
+            });
+        }
+        
+        function showEnterMarks(testsList) {
+            const students = db.exec(`SELECT id, name, roll_number FROM students ORDER BY name`);
+            const studentsList = students.length ? students[0].values : [];
+            
+            document.getElementById('dynamicContent').innerHTML = `
+            <h4>✏️ Enter/Edit Student Marks (Max: 20 per test)</h4>
+            <div class="row">
+                <div class="col-md-6"><label>Select Test</label><select id="testSelect" class="form-select mb-3">${testsList.map(t => `<option value="${t[0]}">${t[1]} (${t[2]})</option>`).join('')}</select></div>
+                <div class="col-md-6"><label>Select Student</label><select id="studentSelect" class="form-select mb-3">${studentsList.map(s => `<option value="${s[0]}">${s[1]} (${s[2]})</option>`).join('')}</select></div>
+            </div>
+            <div class="mb-3"><label>Obtained Marks (0-20)</label><input type="number" id="obtainedMarks" class="form-control" min="0" max="20" step="0.5"></div>
+            <button id="saveMarksBtn" class="btn btn-accent">Save Marks</button>
+            <hr><h5>Quick Fill - All Students</h5>
+            <div id="quickFillTable"></div>`;
+            
+            function loadExistingMarks() {
+                const testId = document.getElementById('testSelect').value;
+                const studentId = document.getElementById('studentSelect').value;
+                if (testId && studentId) {
+                    const existing = db.exec(`SELECT obtained_marks FROM results WHERE student_id = ? AND test_id = ?`, [parseInt(studentId), parseInt(testId)]);
+                    document.getElementById('obtainedMarks').value = (existing.length && existing[0].values.length) ? existing[0].values[0][0] : '';
+                }
+            }
+            
+            document.getElementById('testSelect')?.addEventListener('change', loadExistingMarks);
+            document.getElementById('studentSelect')?.addEventListener('change', loadExistingMarks);
+            document.getElementById('saveMarksBtn')?.addEventListener('click', () => {
+                const testId = parseInt(document.getElementById('testSelect').value);
+                const studentId = parseInt(document.getElementById('studentSelect').value);
+                const marks = parseFloat(document.getElementById('obtainedMarks').value);
+                if (marks >= 0 && marks <= 20) {
+                    saveResult(studentId, testId, marks);
+                    showToast('Marks saved!');
+                    loadExistingMarks();
+                    loadQuickFill();
+                } else {
+                    showToast('Marks must be between 0 and 20', 'danger');
+                }
+            });
+            
+            function loadQuickFill() {
+                const testId = document.getElementById('testSelect')?.value;
+                if (!testId) return;
+                const allStudents = db.exec(`SELECT id, name, roll_number FROM students ORDER BY name`);
+                if (!allStudents.length) return;
+                
+                let tableHtml = `<table class="table table-sm"><thead><tr><th>Student</th><th>Roll</th><th>Marks (0-20)</th><th>Action</th></tr></thead><tbody>`;
+                for (const s of allStudents[0].values) {
+                    const existing = db.exec(`SELECT obtained_marks FROM results WHERE student_id = ? AND test_id = ?`, [s[0], parseInt(testId)]);
+                    const currentMarks = (existing.length && existing[0].values.length) ? existing[0].values[0][0] : '';
+                    tableHtml += `<tr>
+                        <td>${s[1]}</td><td>${s[2]}</td>
+                        <td><input type="number" class="form-control form-control-sm quick-mark" data-student="${s[0]}" value="${currentMarks}" min="0" max="20" step="0.5" style="width:100px"></td>
+                        <td><button class="btn btn-sm btn-success save-quick" data-student="${s[0]}">Save</button></td>
+                    </tr>`;
+                }
+                tableHtml += `</tbody></table>`;
+                document.getElementById('quickFillTable').innerHTML = tableHtml;
+                
+                document.querySelectorAll('.save-quick').forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        const studentId = parseInt(btn.dataset.student);
+                        const marksInput = btn.parentElement.parentElement.querySelector('.quick-mark');
+                        const marks = parseFloat(marksInput.value);
+                        const testIdCurr = parseInt(document.getElementById('testSelect').value);
+                        if (marks >= 0 && marks <= 20) {
+                            saveResult(studentId, testIdCurr, marks);
+                            showToast('Saved!');
+                        } else {
+                            showToast('Marks must be 0-20', 'danger');
+                        }
+                    });
+                });
+            }
+            
+            document.getElementById('testSelect')?.addEventListener('change', loadQuickFill);
+            loadQuickFill();
+        }
+        
+        function showAllResults() {
+            const allResults = db.exec(`SELECT s.name, s.roll_number, t.test_name, r.obtained_marks, r.percentage, r.grade, r.remarks, t.test_date
+                FROM results r JOIN students s ON r.student_id = s.id JOIN tests t ON r.test_id = t.id ORDER BY t.test_date DESC, s.name`);
+            let html = `<h4>📊 All Students Results</h4><div class="table-responsive"><table class="table table-bordered"><thead><tr>
+                <th>Student</th><th>Roll</th><th>Test</th><th>Obtained/20</th><th>%</th><th>Grade</th><th>Remarks</th><th>Date</th></tr></thead><tbody>`;
+            if (allResults.length && allResults[0].values.length) {
+                allResults[0].values.forEach(r => {
+                    html += `<tr><td>${r[0]}</td><td>${r[1]}</td><td>${r[2]}</td><td>${r[3]}/20</td><td>${r[4].toFixed(1)}%</td>
+                        <td><span class="badge bg-info">${r[5]}</span></td><td>${r[6]}</td><td>${r[7]}</td></tr>`;
+                });
+            } else {
+                html += `<tr><td colspan="8" class="text-center">No results entered yet</td></tr>`;
+            }
+            html += `</tbody></table></div>`;
+            document.getElementById('dynamicContent').innerHTML = html;
+        }
+        
+        loadContent();
+    }
+
+    // ==================== STUDENT DASHBOARD ====================
+    function renderStudentDashboard(container) {
+        const studentId = currentUser.id;
+        const results = db.exec(`SELECT t.test_name, r.obtained_marks, r.percentage, r.grade, r.remarks, t.test_date 
+            FROM results r JOIN tests t ON r.test_id = t.id WHERE r.student_id = ? ORDER BY t.test_date DESC`, [studentId]);
+        
+        let totalObtained = 0;
+        if (results.length && results[0].values.length) {
+            results[0].values.forEach(r => totalObtained += r[1]);
+        }
+        let overallPercent = results.length && results[0].values.length ? (totalObtained / (results[0].values.length * 20)) * 100 : 0;
+        let overallGrade = calculateGradeRemarks(overallPercent);
+        
+        let resultsHtml = '';
+        if (results.length && results[0].values.length) {
+            resultsHtml = `<div class="table-responsive"><table class="table table-bordered"><thead><tr>
+                <th>Test Name</th><th>Date</th><th>Obtained/20</th><th>Percentage</th><th>Grade</th><th>Remarks</th></tr></thead><tbody>`;
+            results[0].values.forEach(r => {
+                resultsHtml += `<tr><td>${r[0]}</td><td>${r[5]}</td><td>${r[1]}/20</td>
+                    <td><strong>${r[2].toFixed(1)}%</strong></td>
+                    <td><span class="grade-badge bg-primary text-white">${r[3]}</span></td>
+                    <td>${r[4]}</td></tr>`;
+            });
+            resultsHtml += `</tbody></table></div>`;
+        } else {
+            resultsHtml = `<div class="alert alert-warning">No results published yet. Contact your teacher.</div>`;
+        }
+        
+        container.innerHTML = `
+        <div class="container py-4">
+            <div class="card card-modern p-4">
+                <h2>📖 My Academic Record</h2>
+                <div class="row mt-3">
+                    <div class="col-md-6">
+                        <p><strong>Name:</strong> ${currentUser.name}</p>
+                        <p><strong>Father Name:</strong> ${currentUser.father_name || 'N/A'}</p>
+                        <p><strong>Roll Number:</strong> ${currentUser.roll_number}</p>
+                        <p><strong>Class:</strong> ${currentUser.class_name}</p>
+                    </div>
+                    <div class="col-md-6 text-center">
+                        <div style="width:100px;height:100px;border-radius:50%;background:linear-gradient(135deg,#667eea,#764ba2);margin:0 auto;display:flex;align-items:center;justify-content:center;flex-direction:column;color:white;">
+                            <div style="font-size:28px;font-weight:bold;">${overallGrade.grade}</div>
+                            <div style="font-size:12px;">${overallPercent.toFixed(1)}%</div>
+                        </div>
+                        <p class="mt-2"><strong>Subject:</strong> Computer Science</p>
+                    </div>
+                </div>
+                <h4 class="mt-4">📝 All Test Results (20 marks each)</h4>
+                ${resultsHtml}
+                <div class="mt-4">
+                    <button id="downloadPdfBtn" class="btn btn-accent" ${!results[0]?.values.length ? 'disabled' : ''}>📄 Download Professional Report Card</button>
+                    <button id="printBtn" class="btn btn-outline-secondary ms-2" ${!results[0]?.values.length ? 'disabled' : ''}>🖨️ Print</button>
+                    <button id="logoutBtn" class="btn btn-danger float-end">Logout</button>
+                </div>
+            </div>
+        </div>`;
+        
+        if (results[0]?.values.length) {
+            document.getElementById('downloadPdfBtn')?.addEventListener('click', () => downloadBeautifulReportPDF(studentId));
+            document.getElementById('printBtn')?.addEventListener('click', () => window.print());
+        }
+        document.getElementById('logoutBtn')?.addEventListener('click', () => logout());
+    }
+
+    // ==================== REPORTS PAGE ====================
+    function renderReportsPage(container) {
+        container.innerHTML = `
+        <div class="container py-4">
+            <div class="card-modern p-4">
+                <h3>📁 Reports & Backup</h3>
+                <div class="row g-3">
+                    <div class="col-md-6"><button id="exportAllPDF" class="btn btn-primary w-100">📑 Export All Results PDF</button></div>
+                    <div class="col-md-6"><button id="backupDB" class="btn btn-info w-100">💾 Backup Database</button></div>
+                    <div class="col-md-6"><button id="restoreDB" class="btn btn-warning w-100">↩️ Restore Database</button></div>
+                    <div class="col-md-6"><button id="backToDashboard" class="btn btn-secondary w-100">← Back to Dashboard</button></div>
+                </div>
+                <input type="file" id="restoreFile" style="display:none" accept=".sqlite">
+            </div>
+        </div>`;
+        
+        document.getElementById('exportAllPDF')?.addEventListener('click', async () => {
+            const all = db.exec(`SELECT s.name, s.roll_number, t.test_name, r.obtained_marks, r.percentage, r.grade 
+                FROM results r JOIN students s ON r.student_id = s.id JOIN tests t ON r.test_id = t.id`);
+            if (!all.length || !all[0].values.length) { showToast('No data', 'danger'); return; }
+            let html = `<h2>SM Academy - Complete Results</h2><table border="1"><tr><th>Student</th><th>Roll</th><th>Test</th><th>Marks/20</th><th>%</th><th>Grade</th></tr>`;
+            all[0].values.forEach(r => { html += `<tr><td>${r[0]}</td><td>${r[1]}</td><td>${r[2]}</td><td>${r[3]}/20</td><td>${r[4].toFixed(1)}%</td><td>${r[5]}</td></tr>`; });
+            html += `</table>`;
+            const div = document.createElement('div'); div.innerHTML = html; document.body.appendChild(div);
+            const canvas = await html2canvas(div, { scale: 2 });
+            const pdf = new window.jspdf.jsPDF('landscape');
+            pdf.addImage(canvas.toDataURL(), 'PNG', 10, 10, 280, 0);
+            pdf.save('all_results.pdf');
+            div.remove();
+        });
+        
+        document.getElementById('backupDB')?.addEventListener('click', () => {
+            const data = db.export();
+            const blob = new Blob([data]);
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = `sm_academy_backup.sqlite`;
+            a.click();
+            showToast('Backup created');
+        });
+        
+        document.getElementById('restoreDB')?.addEventListener('click', () => document.getElementById('restoreFile').click());
+        document.getElementById('restoreFile')?.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            const reader = new FileReader();
+            reader.onload = () => {
+                db = new SQL.Database(new Uint8Array(reader.result));
+                initDatabase();
+                showToast('Restored! Refreshing...');
+                setTimeout(() => window.location.reload(), 1500);
+            };
+            reader.readAsArrayBuffer(file);
+        });
+        
+        document.getElementById('backToDashboard')?.addEventListener('click', () => navigateTo('teacher-dashboard.html'));
+    }
+
+    // ==================== INITIALIZATION ====================
+    window.addEventListener('hashchange', () => renderPageByHash());
+    window.addEventListener('load', async () => {
+        await loadSQLAndInit();
+        const session = localStorage.getItem('sm_session');
+        if (session) try { currentUser = JSON.parse(session); } catch(e) {}
+        const toastContainer = document.createElement('div');
+        toastContainer.id = 'toastContainer';
+        toastContainer.className = 'toast-container position-fixed bottom-0 end-0 p-3';
+        document.body.appendChild(toastContainer);
+        renderPageByHash();
+    });
+</script>
+</body>
+</html>
